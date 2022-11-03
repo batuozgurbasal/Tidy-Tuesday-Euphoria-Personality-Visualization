@@ -1,0 +1,66 @@
+---
+title: "r_project"
+author: "Batuhan"
+date: "2022-11-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(scales)
+```
+
+## R Markdown
+
+
+
+```{r cars}
+# Get all the data
+tuesdata <- tidytuesdayR::tt_load('2022-08-16')
+characters <- tuesdata$characters
+stats <- tuesdata$psych_stats
+```
+
+```{r}
+# Get the stats for the office 
+euphoria = stats %>%
+  filter(uni_name == "Euphoria")
+  
+# choose the characteristics we want  
+traits = c("playful", "opinionated", "awkward", "emotional", "dramatic", "playful", "flirtatious", "bold", "trusting")
+
+# Narrow it down to those traits 
+small_euphoria = euphoria%>%
+  filter(personality %in% traits)
+
+# only keep the important columns
+small_euphoria = small_euphoria[,c("char_name","personality","avg_rating")]
+
+# get rid of duplicates
+small_euphoria = small_euphoria%>%
+  distinct(char_name,personality,.keep_all = TRUE)
+
+# Pivot
+comparision = small_euphoria %>%
+  pivot_wider(names_from = personality, values_from = avg_rating)
+
+# Replace NaN's with averages
+comparision = comparision%>%
+  mutate_if(is.numeric,~replace_na(.,mean(.,na.rm=TRUE)))
+
+# Keep the characters you want 
+characters = c('Rue Bennett', 'Jules Vaughn
+','Maddy Perez','Cassie Howard','Nate Jacobs', 'Lexi Howard')
+
+small_comparision = comparision %>%
+  filter(char_name %in% characters)
+```
+
+```{r}
+small_comparision %>%
+  mutate_each(funs(rescale), -char_name) %>%
+  ggradar()
+```
+
